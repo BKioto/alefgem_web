@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+snapshot_alefgem.txt
+Strategy.md
+collect_alefgem_snapshot.bat
+collect_alefgem_snapshot.py
