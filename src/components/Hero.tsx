@@ -46,7 +46,7 @@ export default function Hero() {
             
             {/* عکس جدید بهینه‌شده */}
             <Image
-              src="/hero-banner.webp"
+              src="/hero-banner.png"
               alt="جواهر خاص الف‌جم"
               fill
               priority // این باعث میشه عکس همون اول با بالاترین سرعت لود بشه
