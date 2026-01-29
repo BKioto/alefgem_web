@@ -13,23 +13,20 @@ interface ProductCardProps {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
 
-  // فرمت کردن قیمت
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fa-IR").format(price);
   };
 
+  // اگر اسلاگ داشت از اون استفاده کن، وگرنه (برای اطمینان) از آیدی
+  const productLink = `/product/${product.slug || product.id}`;
+
   return (
-    // نکته مهم: break-inside-avoid برای جلوگیری از شکستن کارت در چیدمان ستونی (پینترستی) الزامی است
     <div className="group break-inside-avoid relative mb-4 flex flex-col overflow-hidden rounded-2xl bg-[#111] border border-[#222] transition-all duration-300 hover:border-[#D4AF37] hover:shadow-2xl hover:shadow-[#D4AF37]/10">
       
-      {/* لینک دور کل بخش بالا */}
-      <Link href={`/product/${product.id}`} className="relative block w-full bg-[#050505]">
-        
-        {/* تصویر محصول (سایز طبیعی و داینامیک) */}
+      <Link href={productLink} className="relative block w-full bg-[#050505]">
         <Image
           src={product.image_url || "/placeholder.jpg"} 
           alt={product.name}
-          // این تنظیمات برای حفظ نسبت تصویر اصلی (بدون کراپ) الزامی است
           width={0}
           height={0}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -37,17 +34,14 @@ export default function ProductCard({ product }: ProductCardProps) {
           className="transition-transform duration-700 group-hover:scale-105"
         />
 
-        {/* بج سینه (مثلاً ویژه) */}
         {product.is_featured && (
           <div className="absolute left-3 top-3 rounded-full bg-[#D4AF37] px-3 py-1 text-[10px] font-bold text-black shadow-lg z-10">
             ویژه
           </div>
         )}
 
-        {/* لایه تاریک روی عکس هنگام هاور */}
         <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
 
-        {/* دکمه افزودن سریع به سبد */}
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -65,10 +59,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </button>
       </Link>
 
-      {/* --- بخش اطلاعات محصول --- */}
       <div className="flex flex-col p-4">
-        
-        {/* دسته‌بندی و وزن */}
         <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
           <span className="text-[#D4AF37]">{product.category_name}</span>
           {product.weight > 0 && (
@@ -79,14 +70,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        {/* نام محصول */}
-        <Link href={`/product/${product.id}`} className="mb-3 block">
+        <Link href={productLink} className="mb-3 block">
           <h3 className="text-sm font-medium leading-relaxed text-white transition-colors group-hover:text-[#D4AF37]">
             {product.name}
           </h3>
         </Link>
 
-        {/* قیمت */}
         <div className="mt-auto pt-2 border-t border-[#222]/50">
           <div className="flex flex-col items-end">
             <span className="text-lg font-bold text-[#D4AF37]">

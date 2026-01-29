@@ -3,19 +3,20 @@
 export interface Product {
   id: number;
   created_at: string;
-  name: string;          // قبلا title بود، الان شد name
+  name: string;
   description: string | null;
   price: number;
   sku: string;
-  category_name: string; // قبلا category بود
+  category_name: string;
   tags: string[] | null;
-  image_url: string;     // عکس اصلی
+  image_url: string;
   gallery_images: string[] | null;
   meta_title: string | null;
   meta_description: string | null;
   is_featured: boolean;
-  weight: number;        // اضافه شد
-  stone_price: number;   // اضافه شد
+  weight: number;
+  stone_price: number;
   stock_quantity: number;
-  wage: number;          // اجرت
+  wage: number;
+  slug: string; // <--- این جدید اضافه شد
 }

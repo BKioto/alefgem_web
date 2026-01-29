@@ -1,22 +1,22 @@
 import { MetadataRoute } from 'next';
 import { supabase } from '@/lib/supabase';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://alefgem.vercel.app'; // آدرس سایتت رو اگر دامنه خریدی اینجا بگذار
+const BASE_URL = 'https://alefgem.com';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // 1. دریافت تمام محصولات برای ساخت لینک‌های داینامیک
+  // دریافت محصولات همراه با slug
   const { data: products } = await supabase
     .from('products')
-    .select('id, created_at');
+    .select('id, slug, created_at');
 
   const productUrls = (products || []).map((product) => ({
-    url: `${BASE_URL}/product/${product.id}`,
+    // اینجا از slug استفاده میکنیم. اگر slug نبود (محصولات قدیمی) از id استفاده میکنه
+    url: `${BASE_URL}/product/${product.slug || product.id}`,
     lastModified: new Date(product.created_at),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));
 
-  // 2. لینک‌های ثابت سایت
   const staticRoutes = [
     '',
     '/shop',
