@@ -31,7 +31,8 @@ export default function Navbar() {
     e.preventDefault(); 
     if (searchQuery.trim()) {
       // کاربر رو بفرست به صفحه فروشگاه
-      router.push("/shop"); 
+      // برای هندل کردن پارامترهای سرچ
+      router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`); 
       setIsSearchOpen(false); // بستن کادر سرچ
     }
   };
@@ -50,8 +51,19 @@ export default function Navbar() {
               <Menu className="h-7 w-7" />
             </button>
             
-            <Link href="/" className="text-2xl font-bold text-[#D4AF37] tracking-wider">
-              الف‌جِم
+            <Link href="/" className="flex items-center gap-3 group">
+              {/* لوگوی تصویری با افکت طلایی */}
+              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#D4AF37]/30 transition-all group-hover:border-[#D4AF37] group-hover:shadow-[0_0_12px_rgba(212,175,55,0.4)]">
+                <img 
+                  src="/logo.png" 
+                  alt="لوگو الف‌جم" 
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              
+              <span className="text-2xl font-bold text-[#D4AF37] tracking-wider transition-colors group-hover:text-white">
+                الف‌جِم
+              </span>
             </Link>
           </div>
 
@@ -86,7 +98,7 @@ export default function Navbar() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onBlur={() => !searchQuery && setIsSearchOpen(false)} 
-                    className="w-32 rounded-lg border border-[#D4AF37] bg-[#111] px-2 py-1 text-sm text-white focus:outline-none sm:w-48 transition-all"
+                    className="w-32 rounded-lg border border-[#D4AF37] bg-[#111] px-2 py-1 text-sm text-white focus:outline-none sm:w-48 transition-all shadow-[0_0_10px_rgba(212,175,55,0.2)]"
                   />
                   <button type="button" onClick={() => setIsSearchOpen(false)} className="mr-2 text-gray-400 hover:text-red-500">
                     <X className="h-4 w-4" />
@@ -108,7 +120,7 @@ export default function Navbar() {
               <ShoppingBag className="h-6 w-6" />
               {/* نمایش عدد واقعی */}
               {cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#D4AF37] text-[10px] font-bold text-black animate-pulse">
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#D4AF37] text-[10px] font-bold text-black animate-pulse shadow-md">
                   {cartCount}
                 </span>
               )}
@@ -133,7 +145,14 @@ export default function Navbar() {
       >
         <div className="flex h-full flex-col p-6">
           <div className="flex items-center justify-between mb-10 border-b border-[#222] pb-6">
-            <span className="text-xl font-bold text-[#D4AF37]">الف‌جِم</span>
+            {/* لوگو در منوی موبایل */}
+            <div className="flex items-center gap-2">
+               <div className="h-8 w-8 overflow-hidden rounded-full border border-[#D4AF37]/30">
+                  <img src="/logo.png" alt="Logo" className="h-full w-full object-cover"/>
+               </div>
+               <span className="text-xl font-bold text-[#D4AF37]">الف‌جِم</span>
+            </div>
+
             <button 
               onClick={() => setIsMobileMenuOpen(false)}
               className="rounded-full border border-[#333] p-2 text-gray-400 hover:bg-[#222] hover:text-white transition-colors"
@@ -173,7 +192,7 @@ export default function Navbar() {
 
           <div className="mt-auto border-t border-[#222] pt-6">
             <div className="flex justify-center gap-6">
-              <a href="#" className="text-gray-500 hover:text-[#D4AF37] transition-colors">
+              <a href="https://instagram.com/alefgem" target="_blank" className="text-gray-500 hover:text-[#D4AF37] transition-colors">
                 <Instagram className="h-6 w-6" />
               </a>
               <a href="tel:09167008252" className="text-gray-500 hover:text-[#D4AF37] transition-colors">
