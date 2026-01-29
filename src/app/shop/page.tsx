@@ -2,47 +2,61 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation"; 
+import Image from "next/image"; // اضافه شد
 import { Filter, ChevronDown, Loader2, XCircle } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/lib/types";
 
-// لیست دسته‌بندی‌ها
-const categories = [
-  "همه محصولات",
-  "گردنبند",
-  "آویز",
-  "انگشتر",
-  "گوشواره",
-  "دستبند",
-  "نیم ست",
-  "سرویس کامل",
-  "سنگ قیمتی",
-  "طلا",
-  "نقره"
-];
+// نگاشت نام دسته به آیکون (برای سایدبار)
+const categoryIcons: Record<string, string> = {
+  "همه محصولات": "", // آیکون ندارد
+  "گردنبند": "/icons/necklace.png",
+  "آویز": "/icons/pendant.png",
+  "انگشتر": "/icons/ring.png",
+  "گوشواره": "/icons/earrings.png",
+  "دستبند": "/icons/bracelet.png",
+  "نیم ست": "/icons/half-set.png",
+  "سرویس کامل": "/icons/full-set.png",
+  "سنگ قیمتی": "/icons/gemstone.png",
+  "طلا": "/icons/gold.png",
+  "نقره": "/icons/silver.png"
+};
+
+// لیست دسته‌بندی‌ها (ترتیب نمایش)
+const categories = Object.keys(categoryIcons);
 
 // --- کامپوننت داخلی (محتوای فروشگاه) ---
 function ShopContent() {
   const searchParams = useSearchParams();
-  const searchQuery = searchParams.get("q"); // دریافت کلمه جستجو شده از URL
+  const searchQuery = searchParams.get("q"); 
+  const categoryParam = searchParams.get("category"); // دریافت دسته از URL
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState("همه محصولات");
+  
+  // اگر در URL دسته انتخاب شده بود (از صفحه اصلی آمده)، آن را انتخاب کن، وگرنه "همه محصولات"
+  const [selectedCategory, setSelectedCategory] = useState(categoryParam || "همه محصولات");
+
+  // اگر پارامتر URL تغییر کرد، استیت را آپدیت کن
+  useEffect(() => {
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [categoryParam]);
 
   useEffect(() => {
     async function fetchProducts() {
       setIsLoading(true);
       
-      // کوئری پایه
       let query = supabase
         .from("products")
         .select("*")
         .order('created_at', { ascending: false });
       
-      // 1. اعمال فیلتر دسته‌بندی
+      // 1. فیلتر دسته‌بندی
       if (selectedCategory !== "همه محصولات") {
+        // هندل کردن نیم‌ست چون ممکن است با فاصله یا نیم‌فاصله باشد
         if (selectedCategory === "نیم ست") {
              query = query.ilike("category_name", "%نیم%ست%");
         } else {
@@ -50,7 +64,7 @@ function ShopContent() {
         }
       }
 
-      // 2. اعمال فیلتر جستجو
+      // 2. فیلتر جستجو
       if (searchQuery) {
         query = query.ilike("name", `%${searchQuery}%`);
       }
@@ -73,7 +87,7 @@ function ShopContent() {
       
       {/* --- سایدبار فیلترها --- */}
       <aside className="w-full lg:w-64 shrink-0">
-        <div className="sticky top-24 rounded-xl border border-[#222] bg-[#0a0a0a] p-5">
+        <div className="sticky top-24 rounded-2xl border border-[#222] bg-[#0a0a0a] p-5">
           
           <div className="mb-4 flex items-center justify-between text-lg font-bold text-white">
             <div className="flex items-center gap-2">
@@ -81,10 +95,15 @@ function ShopContent() {
               فیلترها
             </div>
             
-            {searchQuery && (
-              <a href="/shop" className="text-xs text-red-500 hover:underline">
-                لغو جستجو
-              </a>
+            {(searchQuery || selectedCategory !== "همه محصولات") && (
+              <button 
+                onClick={() => {
+                  window.location.href = "/shop";
+                }}
+                className="text-xs text-red-500 hover:underline"
+              >
+                پاک کردن
+              </button>
             )}
           </div>
           
@@ -94,22 +113,40 @@ function ShopContent() {
              </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             {categories.map((cat, idx) => (
-              <label key={idx} className="flex cursor-pointer items-center gap-2 rounded-lg p-2 transition-colors hover:bg-[#111]">
-                <div className="relative flex items-center">
-                  <input 
-                    type="radio" 
-                    name="category"
-                    className="peer h-4 w-4 appearance-none rounded-full border border-gray-500 checked:border-[#D4AF37] checked:bg-[#D4AF37]"
-                    checked={selectedCategory === cat}
-                    onChange={() => setSelectedCategory(cat)}
-                  />
-                  <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black opacity-0 peer-checked:opacity-100"></div>
-                </div>
+              <label key={idx} className={`flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-all ${selectedCategory === cat ? "bg-[#D4AF37]/10 border border-[#D4AF37]/20" : "hover:bg-[#111] border border-transparent"}`}>
+                
+                {/* دکمه رادیویی مخفی */}
+                <input 
+                  type="radio" 
+                  name="category"
+                  className="hidden"
+                  checked={selectedCategory === cat}
+                  onChange={() => setSelectedCategory(cat)}
+                />
+
+                {/* آیکون کوچک */}
+                {categoryIcons[cat] ? (
+                  <div className="relative h-6 w-6 shrink-0">
+                    <Image 
+                      src={categoryIcons[cat]} 
+                      alt={cat} 
+                      fill 
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-6 w-6"></div> // فضای خالی برای تراز شدن
+                )}
+                
                 <span className={`text-sm ${selectedCategory === cat ? "font-bold text-[#D4AF37]" : "text-gray-300"}`}>
                   {cat}
                 </span>
+                
+                {selectedCategory === cat && (
+                  <div className="mr-auto h-2 w-2 rounded-full bg-[#D4AF37]"></div>
+                )}
               </label>
             ))}
           </div>
@@ -124,10 +161,6 @@ function ShopContent() {
           </div>
         ) : products.length > 0 ? (
           
-          // *** استایل پینترستی (Masonry) ***
-          // columns-1 sm:columns-2 ... -> تعداد ستون‌ها
-          // space-y-4 -> فاصله عمودی بین آیتم‌ها
-          // gap-4 -> فاصله افقی بین ستون‌ها
           <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 space-y-4">
             {products.map((product) => (
               <ProductCard key={product.id} product={product} />
@@ -149,7 +182,7 @@ function ShopContent() {
             <button 
               onClick={() => {
                  setSelectedCategory("همه محصولات");
-                 window.location.href = "/shop"; 
+                 window.history.pushState({}, '', '/shop'); // پاک کردن URL بدون رفرش
               }}
               className="mt-6 rounded-full border border-[#D4AF37] px-6 py-2 text-sm text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-all"
             >

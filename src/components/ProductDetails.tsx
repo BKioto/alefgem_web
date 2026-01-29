@@ -7,13 +7,31 @@ import { ShoppingBag, ChevronRight, Star, Truck, ShieldCheck, Tag } from "lucide
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/lib/types";
 
-// این کامپوننت فقط وظیفه نمایش و تعامل را دارد
+// نگاشت آیکون‌ها (مشابه صفحه فروشگاه)
+const categoryIcons: Record<string, string> = {
+  "گردنبند": "/icons/necklace.png",
+  "آویز": "/icons/pendant.png",
+  "انگشتر": "/icons/ring.png",
+  "گوشواره": "/icons/earrings.png",
+  "دستبند": "/icons/bracelet.png",
+  "نیم ست": "/icons/half-set.png",
+  "سرویس کامل": "/icons/full-set.png",
+  "سنگ قیمتی": "/icons/gemstone.png",
+  "طلا": "/icons/gold.png",
+  "نقره": "/icons/silver.png"
+};
+
 export default function ProductDetails({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const [selectedImage, setSelectedImage] = useState<string>(product.image_url);
 
   // ترکیب تصویر اصلی و گالری
   const allImages = [product.image_url, ...(product.gallery_images || [])].filter(Boolean);
+
+  // پیدا کردن آیکون مربوط به دسته محصول
+  // هندل کردن "نیم ست" که ممکن است با فاصله یا نیم‌فاصله باشد
+  const catKey = Object.keys(categoryIcons).find(k => product.category_name.includes(k)) || product.category_name;
+  const iconPath = categoryIcons[catKey];
 
   return (
     <div className="min-h-screen bg-[#050505] pb-20 pt-10">
@@ -30,20 +48,19 @@ export default function ProductDetails({ product }: { product: Product }) {
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           
-          {/* --- بخش گالری تصاویر (اصلاح شده) --- */}
+          {/* --- بخش گالری تصاویر --- */}
           <div className="space-y-4">
             <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-[#222] bg-[#111]">
               <Image
                 src={selectedImage || "/placeholder.jpg"}
                 alt={product.name}
                 fill
-                // تغییر مهم: استفاده از object-contain برای نمایش کامل عکس
                 className="object-contain p-4 transition-all duration-500"
               />
             </div>
             
             {allImages.length > 1 && (
-              <div className="flex gap-4 overflow-x-auto pb-2">
+              <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
                 {allImages.map((img, idx) => (
                   <button
                     key={idx}
@@ -67,11 +84,19 @@ export default function ProductDetails({ product }: { product: Product }) {
             
             <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-gray-400">
               <span className="rounded bg-[#111] px-2 py-1 border border-[#333]">کد: {product.sku}</span>
-              <span className="text-[#D4AF37]">{product.category_name}</span>
+              
+              {/* نمایش دسته‌بندی همراه با آیکون */}
+              <Link href={`/shop?category=${product.category_name}`} className="flex items-center gap-2 transition-colors hover:text-[#D4AF37]">
+                {iconPath && (
+                  <Image src={iconPath} alt={product.category_name} width={20} height={20} className="object-contain" />
+                )}
+                <span className="text-[#D4AF37] border-b border-dashed border-[#D4AF37]/50">{product.category_name}</span>
+              </Link>
+
               {product.weight > 0 && (
                  <span className="flex items-center gap-1 text-white">
                    <Star className="h-3 w-3 text-[#D4AF37]" />
-                   وزن طلا: {product.weight} گرم
+                   وزن: {product.weight} گرم
                  </span>
               )}
             </div>

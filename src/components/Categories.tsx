@@ -1,27 +1,20 @@
 import Link from "next/link";
-import { Gem, ArrowLeft, Crown, Circle, Watch, Sparkles, Diamond, type LucideIcon } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 
-// --- بخش موقت (بعداً با دیتابیس جایگزین می‌شود) ---
-// TODO: در فاز 2، این لیست از Supabase خوانده می‌شود.
+// لیست دسته‌بندی‌ها متصل به فایل‌های آیکون جدید
 const staticCategories = [
-  { id: 1, name: "گردنبند", iconName: "Crown", href: "/shop?category=necklace" },
-  { id: 2, name: "آویز", iconName: "Gem", href: "/shop?category=pendant" },
-  { id: 3, name: "انگشتر", iconName: "Circle", href: "/shop?category=ring" },
-  { id: 4, name: "گوشواره", iconName: "Sparkles", href: "/shop?category=earrings" },
-  { id: 5, name: "دستبند", iconName: "Watch", href: "/shop?category=bracelet" },
-  { id: 6, name: "نیم‌ست", iconName: "Diamond", href: "/shop?category=half-set" },
-  { id: 7, name: "سرویس کامل", iconName: "Crown", href: "/shop?category=full-set" },
-  { id: 8, name: "سنگ قیمتی", iconName: "Gem", href: "/shop?category=gemstone" },
-  { id: 9, name: "طلا (شمش)", iconName: "Sparkles", href: "/shop?category=gold" },
-  { id: 10, name: "نقره", iconName: "Circle", href: "/shop?category=silver" },
+  { id: 1, name: "گردنبند", image: "/icons/necklace.png", href: "/shop?category=گردنبند" },
+  { id: 2, name: "آویز", image: "/icons/pendant.png", href: "/shop?category=آویز" },
+  { id: 3, name: "انگشتر", image: "/icons/ring.png", href: "/shop?category=انگشتر" },
+  { id: 4, name: "گوشواره", image: "/icons/earrings.png", href: "/shop?category=گوشواره" },
+  { id: 5, name: "دستبند", image: "/icons/bracelet.png", href: "/shop?category=دستبند" },
+  { id: 6, name: "نیم‌ست", image: "/icons/half-set.png", href: "/shop?category=نیم ست" },
+  { id: 7, name: "سرویس کامل", image: "/icons/full-set.png", href: "/shop?category=سرویس کامل" },
+  { id: 8, name: "سنگ قیمتی", image: "/icons/gemstone.png", href: "/shop?category=سنگ قیمتی" },
+  { id: 9, name: "طلا (شمش)", image: "/icons/gold.png", href: "/shop?category=طلا" },
+  { id: 10, name: "نقره", image: "/icons/silver.png", href: "/shop?category=نقره" },
 ];
-
-// یک تابع کمکی برای نگاشت نام آیکون به کامپوننت واقعی
-const getIcon = (name: string): LucideIcon => {
-  const icons: Record<string, LucideIcon> = { Crown, Gem, Circle, Watch, Sparkles, Diamond };
-  return icons[name] || Circle;
-};
-// ---------------------------------------------------
 
 export default function Categories() {
   return (
@@ -39,33 +32,38 @@ export default function Categories() {
         </div>
 
         {/* شبکه کارت‌ها */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {staticCategories.map((cat) => {
-            const IconComponent = getIcon(cat.iconName);
-            
-            return (
-              <Link
-                key={cat.id}
-                href={cat.href}
-                className="group relative flex flex-col items-center justify-center rounded-xl border border-[#222] bg-[#0a0a0a] p-4 sm:p-6 text-center transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#111] hover:shadow-[0_0_15px_rgba(212,175,55,0.15)]"
-              >
-                {/* آیکون */}
-                <div className="mb-3 sm:mb-4 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-[#111] text-[#888] transition-colors group-hover:bg-[#D4AF37] group-hover:text-black">
-                  <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" />
-                </div>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {staticCategories.map((cat) => (
+            <Link
+              key={cat.id}
+              href={cat.href}
+              className="group relative flex flex-col items-center justify-center rounded-2xl border border-[#222] bg-[#0a0a0a] p-6 text-center transition-all duration-300 hover:border-[#D4AF37] hover:bg-[#111] hover:shadow-[0_0_20px_rgba(212,175,55,0.1)] hover:-translate-y-1"
+            >
+              {/* کانتینر آیکون/تصویر */}
+              <div className="relative mb-4 h-16 w-16 sm:h-20 sm:w-20 transition-transform duration-300 group-hover:scale-110">
+                {/* افکت درخشش پشت آیکون */}
+                <div className="absolute inset-0 rounded-full bg-[#D4AF37]/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
                 
-                {/* نام دسته */}
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-200 transition-colors group-hover:text-white">
-                  {cat.name}
-                </h3>
-                
-                {/* فلش کوچک که موقع هاور میاد */}
-                <div className="absolute bottom-2 opacity-0 transition-all duration-300 group-hover:bottom-3 group-hover:opacity-100">
-                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4 text-[#D4AF37]" />
-                </div>
-              </Link>
-            );
-          })}
+                <Image
+                  src={cat.image}
+                  alt={cat.name}
+                  fill
+                  className="object-contain drop-shadow-lg"
+                  sizes="(max-width: 768px) 64px, 80px"
+                />
+              </div>
+              
+              {/* نام دسته */}
+              <h3 className="text-sm font-bold text-gray-300 transition-colors group-hover:text-[#D4AF37]">
+                {cat.name}
+              </h3>
+              
+              {/* فلش کوچک که موقع هاور میاد */}
+              <div className="absolute bottom-3 opacity-0 transition-all duration-300 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100">
+                <ArrowLeft className="h-4 w-4 text-[#D4AF37]" />
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </section>
