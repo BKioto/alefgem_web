@@ -70,8 +70,9 @@ export default function FeaturedSection() {
           /* --- چیدمان پینترستی (Masonry) --- */
           /* استفاده از columns بجای grid برای ارتفاع متغیر */
           <div className="columns-1 gap-4 sm:columns-2 lg:columns-4 space-y-4">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {featuredProducts.map((product, index) => (
+              // نکته مهم: پاس دادن index برای انیمیشن نوبتی
+              <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
         )}

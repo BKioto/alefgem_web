@@ -53,11 +53,11 @@ export default function Navbar() {
             
             <Link href="/" className="flex items-center gap-3 group">
               {/* لوگوی تصویری با افکت طلایی */}
-              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#D4AF37]/30 transition-all group-hover:border-[#D4AF37] group-hover:shadow-[0_0_12px_rgba(212,175,55,0.4)]">
+              <div className="relative h-10 w-10 overflow-hidden rounded-full bg-white border border-[#D4AF37] shadow-[0_0_10px_rgba(255,255,255,0.2)] transition-all group-hover:scale-105 group-hover:shadow-[0_0_15px_rgba(212,175,55,0.6)]">
                 <img 
                   src="/logo.png" 
                   alt="لوگو الف‌جم" 
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-contain p-1" // کمی پدینگ دادم که لوگو به لبه‌ها نچسبه
                 />
               </div>
               

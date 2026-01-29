@@ -2,15 +2,19 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation"; 
-import Image from "next/image"; // اضافه شد
+import Image from "next/image";
 import { Filter, ChevronDown, Loader2, XCircle } from "lucide-react";
+import { useInView } from "react-intersection-observer"; // ایمپورت سنسور
 import ProductCard from "@/components/ProductCard";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/lib/types";
 
-// نگاشت نام دسته به آیکون (برای سایدبار)
+// تعداد محصولی که هر بار لود میشه
+const BATCH_SIZE = 12;
+
+// نگاشت نام دسته به آیکون
 const categoryIcons: Record<string, string> = {
-  "همه محصولات": "", // آیکون ندارد
+  "همه محصولات": "",
   "گردنبند": "/icons/necklace.png",
   "آویز": "/icons/pendant.png",
   "انگشتر": "/icons/ring.png",
@@ -23,64 +27,109 @@ const categoryIcons: Record<string, string> = {
   "نقره": "/icons/silver.png"
 };
 
-// لیست دسته‌بندی‌ها (ترتیب نمایش)
 const categories = Object.keys(categoryIcons);
 
-// --- کامپوننت داخلی (محتوای فروشگاه) ---
 function ShopContent() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("q"); 
-  const categoryParam = searchParams.get("category"); // دریافت دسته از URL
+  const categoryParam = searchParams.get("category");
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // اگر در URL دسته انتخاب شده بود (از صفحه اصلی آمده)، آن را انتخاب کن، وگرنه "همه محصولات"
+  // استیت‌های مربوط به اسکرول بی‌نهایت
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  
+  // سنسور اسکرول
+  const { ref, inView } = useInView({
+    threshold: 0, // به محض دیده شدن عمل کنه
+    rootMargin: "100px", // ۱۰۰ پیکسل مونده به ته صفحه شروع کنه به لود
+  });
+
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || "همه محصولات");
 
-  // اگر پارامتر URL تغییر کرد، استیت را آپدیت کن
+  // هماهنگی استیت با URL
   useEffect(() => {
     if (categoryParam) {
       setSelectedCategory(categoryParam);
     }
   }, [categoryParam]);
 
+  // ریست کردن لیست وقتی فیلتر یا سرچ عوض میشه
   useEffect(() => {
-    async function fetchProducts() {
-      setIsLoading(true);
-      
-      let query = supabase
-        .from("products")
-        .select("*")
-        .order('created_at', { ascending: false });
-      
-      // 1. فیلتر دسته‌بندی
-      if (selectedCategory !== "همه محصولات") {
-        // هندل کردن نیم‌ست چون ممکن است با فاصله یا نیم‌فاصله باشد
-        if (selectedCategory === "نیم ست") {
-             query = query.ilike("category_name", "%نیم%ست%");
-        } else {
-             query = query.eq("category_name", selectedCategory);
-        }
-      }
+    setProducts([]);
+    setPage(0);
+    setHasMore(true);
+    setIsLoading(true); // لودینگ رو روشن کن تا اولین سری بیاد
+    fetchProducts(0, true); // درخواست صفحه صفر
+  }, [selectedCategory, searchQuery]);
 
-      // 2. فیلتر جستجو
-      if (searchQuery) {
-        query = query.ilike("name", `%${searchQuery}%`);
-      }
+  // وقتی اسکرول به پایین رسید (inView true شد)
+  useEffect(() => {
+    if (inView && hasMore && !isLoading) {
+      const nextPage = page + 1;
+      fetchProducts(nextPage, false);
+      setPage(nextPage);
+    }
+  }, [inView]);
 
-      const { data, error } = await query;
+  async function fetchProducts(pageNumber: number, isNewFilter: boolean) {
+    // اگر فیلتر جدید نیست و داره لود میکنه، جلوگیری کن (برای جلوگیری از درخواست تکراری)
+    if (!isNewFilter && isLoading) return; 
 
-      if (error) {
-        console.error("Error fetching products:", error);
+    setIsLoading(true);
+
+    // محاسبه بازه (مثلا 0 تا 11، بعد 12 تا 23 و ...)
+    const from = pageNumber * BATCH_SIZE;
+    const to = from + BATCH_SIZE - 1;
+    
+    let query = supabase
+      .from("products")
+      .select("*")
+      .order('created_at', { ascending: false })
+      .range(from, to); // <--- نکته کلیدی: فقط همین بازه رو بگیر
+    
+    // اعمال فیلتر دسته‌بندی
+    if (selectedCategory !== "همه محصولات") {
+      if (selectedCategory === "نیم ست") {
+           query = query.ilike("category_name", "%نیم%ست%");
       } else {
-        setProducts((data as any[]) || []);
+           query = query.eq("category_name", selectedCategory);
       }
-      setIsLoading(false);
     }
 
-    fetchProducts();
-  }, [selectedCategory, searchQuery]);
+    // اعمال فیلتر جستجو
+    if (searchQuery) {
+      query = query.ilike("name", `%${searchQuery}%`);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Error fetching products:", error);
+    } else {
+      const newProducts = (data as any[]) || [];
+      
+      // اگر تعداد دیتای دریافتی کمتر از تعداد درخواستی بود، یعنی به ته لیست رسیدیم
+      if (newProducts.length < BATCH_SIZE) {
+        setHasMore(false);
+      }
+
+      if (isNewFilter) {
+        setProducts(newProducts);
+      } else {
+        // اضافه کردن محصولات جدید به ته لیست قبلی
+        setProducts(prev => [...prev, ...newProducts]);
+      }
+    }
+    setIsLoading(false);
+  }
+
+  const resetFilters = () => {
+    setSelectedCategory("همه محصولات");
+    window.history.pushState({}, '', '/shop');
+  };
 
   return (
     <div className="flex flex-col gap-8 lg:flex-row">
@@ -97,9 +146,7 @@ function ShopContent() {
             
             {(searchQuery || selectedCategory !== "همه محصولات") && (
               <button 
-                onClick={() => {
-                  window.location.href = "/shop";
-                }}
+                onClick={resetFilters}
                 className="text-xs text-red-500 hover:underline"
               >
                 پاک کردن
@@ -117,7 +164,6 @@ function ShopContent() {
             {categories.map((cat, idx) => (
               <label key={idx} className={`flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-all ${selectedCategory === cat ? "bg-[#D4AF37]/10 border border-[#D4AF37]/20" : "hover:bg-[#111] border border-transparent"}`}>
                 
-                {/* دکمه رادیویی مخفی */}
                 <input 
                   type="radio" 
                   name="category"
@@ -126,7 +172,6 @@ function ShopContent() {
                   onChange={() => setSelectedCategory(cat)}
                 />
 
-                {/* آیکون کوچک */}
                 {categoryIcons[cat] ? (
                   <div className="relative h-6 w-6 shrink-0">
                     <Image 
@@ -137,7 +182,7 @@ function ShopContent() {
                     />
                   </div>
                 ) : (
-                  <div className="h-6 w-6"></div> // فضای خالی برای تراز شدن
+                  <div className="h-6 w-6"></div> 
                 )}
                 
                 <span className={`text-sm ${selectedCategory === cat ? "font-bold text-[#D4AF37]" : "text-gray-300"}`}>
@@ -155,40 +200,54 @@ function ShopContent() {
 
       {/* --- لیست محصولات --- */}
       <div className="flex-1">
-        {isLoading ? (
+        
+        {/* اگر دفعه اوله و محصولی نداریم و داره لود میشه */}
+        {products.length === 0 && isLoading ? (
           <div className="flex h-64 w-full items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-[#D4AF37]" />
           </div>
         ) : products.length > 0 ? (
           
-          <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 space-y-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 space-y-4">
+              {products.map((product, index) => (
+                <ProductCard key={product.id} product={product} index={index % BATCH_SIZE} />
+              ))}
+            </div>
+            
+            {/* سنسور اسکرول */}
+            <div ref={ref} className="flex w-full items-center justify-center py-8 h-20">
+              {hasMore && (
+                <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
+              )}
+              {!hasMore && products.length > 0 && (
+                <span className="text-sm text-gray-500">تمام محصولات نمایش داده شد.</span>
+              )}
+            </div>
+          </>
 
         ) : (
-          <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed border-[#333] bg-[#0a0a0a] text-center text-gray-500">
-            <XCircle className="mb-2 h-10 w-10 opacity-50" />
-            <p className="text-lg font-medium">موردی یافت نشد.</p>
-            {searchQuery ? (
-              <p className="text-sm mt-1">
-                برای کلمه <span className="text-[#D4AF37]">"{searchQuery}"</span> محصولی نداریم.
-              </p>
-            ) : (
-              <p className="text-sm mt-1">لطفاً دسته‌بندی دیگری را امتحان کنید.</p>
-            )}
-            
-            <button 
-              onClick={() => {
-                 setSelectedCategory("همه محصولات");
-                 window.history.pushState({}, '', '/shop'); // پاک کردن URL بدون رفرش
-              }}
-              className="mt-6 rounded-full border border-[#D4AF37] px-6 py-2 text-sm text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-all"
-            >
-              نمایش همه محصولات
-            </button>
-          </div>
+          // حالت بدون محصول (وقتی واقعا چیزی پیدا نشد)
+          !isLoading && (
+            <div className="flex h-64 flex-col items-center justify-center rounded-xl border border-dashed border-[#333] bg-[#0a0a0a] text-center text-gray-500">
+              <XCircle className="mb-2 h-10 w-10 opacity-50" />
+              <p className="text-lg font-medium">موردی یافت نشد.</p>
+              {searchQuery ? (
+                <p className="text-sm mt-1">
+                  برای کلمه <span className="text-[#D4AF37]">"{searchQuery}"</span> محصولی نداریم.
+                </p>
+              ) : (
+                <p className="text-sm mt-1">لطفاً دسته‌بندی دیگری را امتحان کنید.</p>
+              )}
+              
+              <button 
+                onClick={resetFilters}
+                className="mt-6 rounded-full border border-[#D4AF37] px-6 py-2 text-sm text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black transition-all"
+              >
+                نمایش همه محصولات
+              </button>
+            </div>
+          )
         )}
       </div>
 
@@ -196,13 +255,11 @@ function ShopContent() {
   );
 }
 
-// --- کامپوننت اصلی صفحه ---
 export default function ShopPage() {
   return (
     <div className="min-h-screen bg-[#050505] pb-20 pt-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        {/* هدر صفحه */}
         <div className="mb-8 flex flex-col items-center justify-between gap-4 border-b border-[#222] pb-6 sm:flex-row">
           <div>
             <h1 className="text-3xl font-bold text-white">فروشگاه <span className="text-[#D4AF37]">الف‌جم</span></h1>

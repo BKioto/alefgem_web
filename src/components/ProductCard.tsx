@@ -5,23 +5,36 @@ import Image from "next/image";
 import { ShoppingBag, Star } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/lib/types"; 
+import { motion } from "framer-motion"; // ایمپورت انیمیشن
 
 interface ProductCardProps {
   product: Product;
+  index?: number; // شماره کارت رو می‌گیریم برای محاسبه تاخیر
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { addToCart } = useCart();
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fa-IR").format(price);
   };
 
-  // اگر اسلاگ داشت از اون استفاده کن، وگرنه (برای اطمینان) از آیدی
+  // ساخت لینک محصول (اسلاگ یا آیدی)
   const productLink = `/product/${product.slug || product.id}`;
 
   return (
-    <div className="group break-inside-avoid relative mb-4 flex flex-col overflow-hidden rounded-2xl bg-[#111] border border-[#222] transition-all duration-300 hover:border-[#D4AF37] hover:shadow-2xl hover:shadow-[#D4AF37]/10">
+    // تبدیل div معمولی به motion.div برای انیمیشن
+    <motion.div
+      initial={{ opacity: 0, y: 30 }} // حالت اولیه: نامرئی و کمی پایین‌تر
+      whileInView={{ opacity: 1, y: 0 }} // وقتی اسکرول شد: مرئی و سرجای خود
+      viewport={{ once: true, margin: "-50px" }} // فقط یکبار اجرا بشه
+      transition={{ 
+        duration: 0.5, 
+        delay: index * 0.1, // تاخیر هوشمند: هر کارت دیرتر از قبلی میاد
+        ease: "easeOut" 
+      }}
+      className="group break-inside-avoid relative mb-4 flex flex-col overflow-hidden rounded-2xl bg-[#111] border border-[#222] transition-colors duration-300 hover:border-[#D4AF37] hover:shadow-2xl hover:shadow-[#D4AF37]/10"
+    >
       
       <Link href={productLink} className="relative block w-full bg-[#050505]">
         <Image
@@ -84,6 +97,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
