@@ -4,13 +4,16 @@ import BlogCard from "@/components/BlogCard";
 import { BlogPost } from "@/lib/types";
 import { BookOpen, AlertCircle } from "lucide-react";
 
+// *** تغییر مهم: این خط باعث میشه سایت هر بار اطلاعات رو تازه از دیتابیس بگیره ***
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "مجله الف‌جم | مقالات تخصصی طلا و جواهر",
   description: "جدیدترین مقالات آموزشی در مورد خرید طلا، تشخیص سنگ‌های قیمتی و راهنمای سرمایه‌گذاری در بازار طلا و سکه.",
 };
 
 export default async function BlogPage() {
-  // دریافت مقالات منتشر شده از دیتابیس
+  // دریافت مقالات منتشر شده از دیتابیس (همیشه نسخه تازه)
   const { data: posts, error } = await supabase
     .from("posts")
     .select("*")
