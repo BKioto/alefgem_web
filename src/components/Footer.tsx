@@ -17,11 +17,12 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* ستون دوم: راهنمای مشتریان (لینک‌های جدید) */}
+          {/* ستون دوم: راهنمای مشتریان (لینک بلاگ اضافه شد) */}
           <div>
             <h4 className="text-lg font-semibold text-white mb-4">راهنمای مشتریان</h4>
             <ul className="space-y-3">
               <li><Link href="/shop" className="text-sm text-gray-400 hover:text-[#D4AF37] transition-colors">فروشگاه آنلاین</Link></li>
+              <li><Link href="/blog" className="text-sm text-gray-400 hover:text-[#D4AF37] transition-colors font-bold text-gray-300">مجله الف‌جم (بلاگ)</Link></li>
               <li><Link href="/shipping" className="text-sm text-gray-400 hover:text-[#D4AF37] transition-colors">رویه ارسال و بازگشت</Link></li>
               <li><Link href="/faq" className="text-sm text-gray-400 hover:text-[#D4AF37] transition-colors">سوالات متداول</Link></li>
               <li><Link href="/terms" className="text-sm text-gray-400 hover:text-[#D4AF37] transition-colors">قوانین و مقررات</Link></li>

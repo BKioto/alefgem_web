@@ -18,5 +18,20 @@ export interface Product {
   stone_price: number;
   stock_quantity: number;
   wage: number;
-  slug: string; // <--- این جدید اضافه شد
+  slug: string;
+}
+
+export interface BlogPost {
+  id: number;
+  created_at: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  content: string | null;
+  image_url: string | null;
+  author: string;
+  published: boolean;
+  tags: string[] | null;
+  seo_title: string | null;
+  seo_description: string | null;
 }
