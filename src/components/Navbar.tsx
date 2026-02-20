@@ -1,3 +1,4 @@
+// src/components/Navbar.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -57,7 +58,7 @@ export default function Navbar() {
                 <img 
                   src="/logo.png" 
                   alt="لوگو الف‌جم" 
-                  className="h-full w-full object-contain p-1" // کمی پدینگ دادم که لوگو به لبه‌ها نچسبه
+                  className="h-full w-full object-contain p-1" 
                 />
               </div>
               
@@ -74,6 +75,10 @@ export default function Navbar() {
             </Link>
             <Link href="/shop" className="text-sm font-medium text-gray-300 hover:text-[#D4AF37] transition-colors">
               فروشگاه
+            </Link>
+            {/* لینک جدید اضافه شد 👇 */}
+            <Link href="/gold-calculator" className="text-sm font-medium text-gray-300 hover:text-[#D4AF37] transition-colors">
+              ماشین حساب طلا
             </Link>
             <Link href="/about" className="text-sm font-medium text-gray-300 hover:text-[#D4AF37] transition-colors">
               درباره ما
@@ -165,6 +170,7 @@ export default function Navbar() {
             {[
               { name: "صفحه اصلی", href: "/" },
               { name: "فروشگاه محصولات", href: "/shop" },
+              { name: "ماشین حساب طلا", href: "/gold-calculator" }, // اضافه شد 👇
               { name: "درباره ما", href: "/about" },
               { name: "تماس با ما", href: "/contact" },
               { name: "سبد خرید", href: "/cart" },
