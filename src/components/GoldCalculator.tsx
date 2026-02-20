@@ -6,7 +6,7 @@ import { Calculator, RefreshCw, TrendingUp, Info, Globe, AlertTriangle } from "l
 
 export default function GoldCalculator() {
   const [loading, setLoading] = useState(true);
-  const [dataSource, setDataSource] = useState<string>(""); // منبع قیمت (سایت یا دیتابیس)
+  const [dataSource, setDataSource] = useState<string>(""); // منبع قیمت (SHEET, MANUAL, etc)
   
   // مقادیر ورودی کاربر و سیستم
   const [goldPrice, setGoldPrice] = useState<number>(0); 
@@ -114,10 +114,10 @@ export default function GoldCalculator() {
               <span className="font-mono text-sm font-bold text-[#D4AF37]">{formatPrice(goldPrice)}</span> 
               <span className="text-[10px]">تومان</span>
               
-              {/* نشانگر منبع قیمت */}
-              {dataSource === "TGJU" ? (
+              {/* نشانگر منبع قیمت - اینجا تغییر کرد */}
+              {dataSource === "SHEET" || dataSource === "TGJU" ? (
                 <span className="flex items-center gap-1 rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] text-green-500 border border-green-500/20">
-                  <Globe className="h-3 w-3" /> آنلاین
+                  <Globe className="h-3 w-3" /> آنلاین (Google)
                 </span>
               ) : (
                 <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-1.5 py-0.5 text-[10px] text-yellow-500 border border-yellow-500/20">
@@ -189,7 +189,7 @@ export default function GoldCalculator() {
           <div className="flex items-start gap-2 rounded-lg border border-blue-900/30 bg-blue-900/10 p-3 text-xs text-blue-200 leading-5">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
             <p>
-              قیمت طلا به صورت لحظه‌ای از بازار (TGJU) استعلام می‌شود. 
+              قیمت طلا به صورت لحظه‌ای از بازار (Google) استعلام می‌شود. 
               <br/>
               مالیات بر اساس قانون جدید فقط بر «سود» و «اجرت» محاسبه می‌گردد.
             </p>
