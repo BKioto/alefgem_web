@@ -3,85 +3,78 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import axios from "axios";
 
-// این خط باعث میشه نکست‌جی‌اس کش نکنه و همیشه قیمت تازه بگیره
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'; // کش بی کش
 
 export async function GET() {
   try {
-    // ۱. دریافت تنظیمات از دیتابیس (برای درصد سود و ...)
+    // 1. دریافت درصدهای پیش‌فرض از دیتابیس
     const { data: config } = await supabase
       .from("gold_config")
-      .select("*")
+      .select("profit_percent, tax_percent, wage_percent")
       .limit(1)
       .single();
 
-    const defaultConfig = {
-      profit_percent: 7,
-      tax_percent: 9,
-      wage_percent: 0,
-      manual_price: 0,
-      is_manual_price: false,
-      ...config,
+    const defaults = {
+      profit: config?.profit_percent ?? 7,
+      tax: config?.tax_percent ?? 9,
+      wage: config?.wage_percent ?? 0,
     };
 
     let finalPrice = 0;
-    let source = "SHEET"; // پیش‌فرض: گوگل شیت
 
-    // ۲. بررسی حالت دستی (اگر ادمین گفته باشه فقط دستی)
-    if (defaultConfig.is_manual_price && defaultConfig.manual_price > 0) {
-      finalPrice = Number(defaultConfig.manual_price);
-      source = "MANUAL";
-    } else {
-      // ۳. تلاش برای خواندن از گوگل شیت
-      try {
-        const sheetUrl = process.env.GOOGLE_SHEET_URL;
-
-        if (!sheetUrl) {
-          throw new Error("لینک گوگل شیت در فایل env پیدا نشد");
-        }
-
-        // درخواست به گوگل شیت
-        const { data: csvText } = await axios.get(sheetUrl, {
-          headers: { 'Cache-Control': 'no-cache' } // جلوگیری از کش شدن
-        });
-
-        // پیدا کردن عدد از توی فایل CSV
-        // این دستور میگرده دنبال اولین عدد (با یا بدون ویرگول)
-        const matches = String(csvText).match(/[\d,]+/);
-
-        if (matches) {
-          // حذف ویرگول و تبدیل به عدد خام
-          const rawPriceRial = parseInt(matches[0].replace(/,/g, ''), 10);
-          
-          // تبدیل همیشگی ریال به تومان (طبق دستور شما)
-          finalPrice = Math.floor(rawPriceRial / 10);
-        } else {
-          throw new Error("هیچ عددی در فایل گوگل شیت پیدا نشد");
-        }
-
-      } catch (fetchError) {
-        console.error("Google Sheet Fetch Error:", fetchError);
-        // اگر گوگل شیت هم مشکل داشت، برگرد روی قیمت دستی دیتابیس
-        finalPrice = Number(defaultConfig.manual_price) || 0;
-        source = "FALLBACK_DB";
+    // 2. دریافت قیمت از گوگل شیت
+    try {
+      const sheetUrl = process.env.GOOGLE_SHEET_URL;
+      
+      if (!sheetUrl) {
+        throw new Error("Missing Sheet URL");
       }
+
+      const response = await axios.get(sheetUrl, {
+        headers: { 'Cache-Control': 'no-cache' },
+        timeout: 8000 // 8 ثانیه وقت داره
+      });
+
+      const csvText = String(response.data);
+
+      // 3. پیدا کردن قیمت از بین ویرگول‌ها
+      const parts = csvText.split(',');
+      let foundPrice = 0;
+
+      for (const part of parts) {
+        // تمیزکاری عدد
+        const cleanStr = part.replace(/[^0-9.]/g, ''); 
+        const num = parseFloat(cleanStr);
+
+        // شرط: عدد باید بزرگتر از 5 میلیون باشه (قیمت گرم طلا به ریال)
+        if (!isNaN(num) && num > 5000000) {
+          if (num > foundPrice) {
+            foundPrice = num;
+          }
+        }
+      }
+
+      if (foundPrice > 0) {
+        // تبدیل ریال به تومان
+        finalPrice = Math.floor(foundPrice / 10);
+      } else {
+        finalPrice = 0; 
+      }
+
+    } catch (sheetError) {
+      console.error("Error reading Sheet:", sheetError);
+      finalPrice = 0;
     }
 
-    // ۴. ارسال پاسخ نهایی
     return NextResponse.json({
       success: true,
-      price: finalPrice, // قیمت به تومان
-      defaults: {
-        profit: Number(defaultConfig.profit_percent),
-        tax: Number(defaultConfig.tax_percent),
-        wage: Number(defaultConfig.wage_percent),
-      },
-      source,
+      price: finalPrice,
+      defaults: defaults,
       lastUpdated: new Date().toISOString(),
     });
 
   } catch (error: any) {
-    console.error("API Error:", error);
+    console.error("Fatal Error:", error);
     return NextResponse.json(
       { success: false, message: "Server Error" },
       { status: 500 }

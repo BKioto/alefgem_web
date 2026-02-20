@@ -2,11 +2,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calculator, RefreshCw, TrendingUp, Info, Globe, AlertTriangle } from "lucide-react";
+import { Calculator, RefreshCw, TrendingUp, Info } from "lucide-react";
 
 export default function GoldCalculator() {
   const [loading, setLoading] = useState(true);
-  const [dataSource, setDataSource] = useState<string>(""); // منبع قیمت (SHEET, MANUAL, etc)
   
   // مقادیر ورودی کاربر و سیستم
   const [goldPrice, setGoldPrice] = useState<number>(0); 
@@ -39,7 +38,6 @@ export default function GoldCalculator() {
         setProfitPercent(String(data.defaults.profit));
         setTaxPercent(String(data.defaults.tax));
         setWagePercent(String(data.defaults.wage));
-        setDataSource(data.source);
       }
     } catch (error) {
       console.error("Failed to fetch gold price", error);
@@ -113,17 +111,6 @@ export default function GoldCalculator() {
               <span>نرخ لحظه‌ای گرم ۱۸ عیار:</span>
               <span className="font-mono text-sm font-bold text-[#D4AF37]">{formatPrice(goldPrice)}</span> 
               <span className="text-[10px]">تومان</span>
-              
-              {/* نشانگر منبع قیمت - اینجا تغییر کرد */}
-              {dataSource === "SHEET" || dataSource === "TGJU" ? (
-                <span className="flex items-center gap-1 rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] text-green-500 border border-green-500/20">
-                  <Globe className="h-3 w-3" /> آنلاین (Google)
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-1.5 py-0.5 text-[10px] text-yellow-500 border border-yellow-500/20">
-                  <AlertTriangle className="h-3 w-3" /> دستی/آفلاین
-                </span>
-              )}
             </div>
           </div>
         </div>
