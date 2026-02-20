@@ -2,10 +2,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calculator, RefreshCw, TrendingUp, Info } from "lucide-react";
+import { Calculator, RefreshCw, TrendingUp, Info, Globe, AlertTriangle } from "lucide-react";
 
 export default function GoldCalculator() {
   const [loading, setLoading] = useState(true);
+  const [dataSource, setDataSource] = useState<string>(""); // منبع قیمت (سایت یا دیتابیس)
   
   // مقادیر ورودی کاربر و سیستم
   const [goldPrice, setGoldPrice] = useState<number>(0); 
@@ -23,11 +24,14 @@ export default function GoldCalculator() {
     finalPrice: 0,
   });
 
-  // دریافت اطلاعات از API که در قدم قبلی ساختیم
+  // دریافت اطلاعات از API
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/gold-price");
+      // اضافه کردن پارامتر زمان برای جلوگیری از کش شدن مرورگر
+      const res = await fetch(`/api/gold-price?t=${new Date().getTime()}`, {
+        cache: 'no-store'
+      });
       const data = await res.json();
       
       if (data.success) {
@@ -35,6 +39,7 @@ export default function GoldCalculator() {
         setProfitPercent(String(data.defaults.profit));
         setTaxPercent(String(data.defaults.tax));
         setWagePercent(String(data.defaults.wage));
+        setDataSource(data.source);
       }
     } catch (error) {
       console.error("Failed to fetch gold price", error);
@@ -47,7 +52,7 @@ export default function GoldCalculator() {
     fetchData();
   }, []);
 
-  // محاسبه خودکار (هر بار که یکی از ورودی‌ها تغییر کنه)
+  // محاسبه خودکار
   useEffect(() => {
     const w = parseFloat(weight) || 0;
     const p = parseFloat(profitPercent) || 0;
@@ -84,11 +89,11 @@ export default function GoldCalculator() {
 
   const formatPrice = (price: number) => Math.round(price).toLocaleString("fa-IR");
 
-  if (loading) {
+  if (loading && goldPrice === 0) {
     return (
       <div className="flex h-64 w-full items-center justify-center rounded-2xl border border-[#222] bg-[#0a0a0a] text-[#D4AF37]">
         <RefreshCw className="ml-2 h-6 w-6 animate-spin" />
-        <span className="text-lg">در حال دریافت نرخ لحظه‌ای طلا...</span>
+        <span className="text-lg">در حال دریافت نرخ لحظه‌ای از بازار...</span>
       </div>
     );
   }
@@ -104,18 +109,33 @@ export default function GoldCalculator() {
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">محاسبه‌گر قیمت طلا</h2>
-            <p className="mt-1 text-xs text-gray-400">
-              نرخ لحظه‌ای: <span className="font-mono text-sm font-bold text-[#D4AF37]">{formatPrice(goldPrice)}</span> تومان
-            </p>
+            <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+              <span>نرخ لحظه‌ای گرم ۱۸ عیار:</span>
+              <span className="font-mono text-sm font-bold text-[#D4AF37]">{formatPrice(goldPrice)}</span> 
+              <span className="text-[10px]">تومان</span>
+              
+              {/* نشانگر منبع قیمت */}
+              {dataSource === "TGJU" ? (
+                <span className="flex items-center gap-1 rounded bg-green-500/10 px-1.5 py-0.5 text-[10px] text-green-500 border border-green-500/20">
+                  <Globe className="h-3 w-3" /> آنلاین
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 rounded bg-yellow-500/10 px-1.5 py-0.5 text-[10px] text-yellow-500 border border-yellow-500/20">
+                  <AlertTriangle className="h-3 w-3" /> دستی/آفلاین
+                </span>
+              )}
+            </div>
           </div>
         </div>
+        
         <button 
           onClick={fetchData} 
-          className="flex items-center gap-2 rounded-lg border border-[#333] px-3 py-2 text-sm text-gray-400 transition-colors hover:border-[#D4AF37] hover:text-[#D4AF37]"
-          title="بروزرسانی نرخ"
+          disabled={loading}
+          className="flex items-center gap-2 rounded-lg border border-[#333] px-4 py-2 text-sm text-gray-300 transition-all hover:border-[#D4AF37] hover:text-[#D4AF37] disabled:opacity-50 active:scale-95"
+          title="دریافت نرخ جدید از بازار"
         >
-          <RefreshCw className="h-4 w-4" />
-          بروزرسانی
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? 'در حال دریافت...' : 'بروزرسانی نرخ'}
         </button>
       </div>
 
@@ -130,7 +150,7 @@ export default function GoldCalculator() {
               value={weight} 
               onChange={(e) => setWeight(e.target.value)} 
               placeholder="مثال: 4.5" 
-              className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-lg font-bold text-white placeholder-gray-600 focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37]"
+              className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-lg font-bold text-white placeholder-gray-600 focus:border-[#D4AF37] focus:outline-none focus:ring-1 focus:ring-[#D4AF37] transition-all"
               autoFocus
             />
           </div>
@@ -141,7 +161,7 @@ export default function GoldCalculator() {
               type="number" 
               value={wagePercent} 
               onChange={(e) => setWagePercent(e.target.value)} 
-              className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none"
+              className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-all"
             />
           </div>
 
@@ -152,7 +172,7 @@ export default function GoldCalculator() {
                 type="number" 
                 value={profitPercent} 
                 onChange={(e) => setProfitPercent(e.target.value)} 
-                className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none" 
+                className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-all" 
               />
             </div>
             <div className="space-y-2">
@@ -161,14 +181,18 @@ export default function GoldCalculator() {
                 type="number" 
                 value={taxPercent} 
                 onChange={(e) => setTaxPercent(e.target.value)} 
-                className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none" 
+                className="w-full rounded-xl border border-[#333] bg-[#050505] px-4 py-3 text-white focus:border-[#D4AF37] focus:outline-none transition-all" 
               />
             </div>
           </div>
           
-          <div className="flex items-start gap-2 rounded-lg border border-blue-900/30 bg-blue-900/10 p-3 text-xs text-blue-200">
+          <div className="flex items-start gap-2 rounded-lg border border-blue-900/30 bg-blue-900/10 p-3 text-xs text-blue-200 leading-5">
             <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-400" />
-            <p>قیمت طلا به صورت خودکار دریافت می‌شود. مالیات بر اساس قانون جدید فقط بر «سود» و «اجرت» محاسبه می‌گردد.</p>
+            <p>
+              قیمت طلا به صورت لحظه‌ای از بازار (TGJU) استعلام می‌شود. 
+              <br/>
+              مالیات بر اساس قانون جدید فقط بر «سود» و «اجرت» محاسبه می‌گردد.
+            </p>
           </div>
         </div>
 
@@ -201,7 +225,7 @@ export default function GoldCalculator() {
                 <TrendingUp className="h-6 w-6 text-green-500" />
                 <span className="text-lg font-bold">قیمت نهایی:</span>
               </div>
-              <span className="text-2xl font-extrabold text-[#D4AF37] sm:text-3xl">
+              <span className="text-2xl font-extrabold text-[#D4AF37] sm:text-3xl animate-in fade-in zoom-in duration-300">
                 {formatPrice(results.finalPrice)} <span className="text-sm font-normal text-gray-500">تومان</span>
               </span>
             </div>
