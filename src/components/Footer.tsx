@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Instagram, Phone, MapPin } from "lucide-react";
+import { Instagram, Phone, MapPin, Library } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -7,9 +7,21 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-4">
           
-          {/* ستون اول: درباره الف‌جم */}
+          {/* ستون اول: درباره الف‌جم و لینک مخفی پارتنرها */}
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-xl font-bold text-[#D4AF37] mb-4">گالری الف‌جِم</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <h3 className="text-xl font-bold text-[#D4AF37]">گالری الف‌جِم</h3>
+              
+              {/* لینک استراتژیک شبکه همکاران */}
+              <Link 
+                href="/partners" 
+                title="شبکه همکاران تجاری"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#111] border border-[#333] text-gray-500 hover:bg-[#D4AF37] hover:text-black transition-all opacity-50 hover:opacity-100"
+              >
+                 <Library className="h-4 w-4" />
+              </Link>
+            </div>
+            
             <p className="text-sm text-gray-400 leading-7 max-w-md">
               خلق جواهراتی که راوی داستان‌های شما هستند. ما در الف‌جم با ترکیب هنر دست و سنگ‌های معدنی اصیل، درخششی ابدی را برای شما می‌سازیم.
               <br />
@@ -17,7 +29,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* ستون دوم: راهنمای مشتریان (لینک بلاگ اضافه شد) */}
+          {/* ستون دوم: راهنمای مشتریان */}
           <div>
             <h4 className="text-lg font-semibold text-white mb-4">راهنمای مشتریان</h4>
             <ul className="space-y-3">
@@ -55,10 +67,9 @@ export default function Footer() {
 
         <div className="mt-12 border-t border-[#222] pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center">
           <p className="text-xs text-gray-500">
-            تمامی حقوق برای گالری الف‌جم محفوظ است © {new Date().getFullYear()}
+            تمامی حقوق برای گالری الف‌جم محفوظ است © {new Date().toLocaleDateString('fa-IR', { year: 'numeric' })}
           </p>
           <div className="flex gap-4">
-             {/* نماد اعتماد (فعلا خالی) */}
              <div className="h-10 w-10 rounded bg-[#111] border border-[#333]"></div>
              <div className="h-10 w-10 rounded bg-[#111] border border-[#333]"></div>
           </div>
